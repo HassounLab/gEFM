@@ -1,5 +1,5 @@
 #ifndef EFMGENERATOR_H
-#define	EFMGENERATOR_H
+#define EFMGENERATOR_H
 
 #include <iostream>
 #include <climits>
@@ -267,6 +267,22 @@ private:
       }
    }
 
+   //This function checks if the given efm is equal to another efm with reversible
+   //reaction operating in the opposite direction
+
+   inline bool isRevEfm(int efmIndex, BitVector& revEfm, BitVector* revPairs) {
+      revEfm = pathways[efmIndex].reactionBitData;
+      for (int i = 0; i < reversiblePairCount; i++) {
+         revEfm.flipRevRxn(revPairs[i]);
+      }
+      for (int j = efmIndex + 1; j < pathways.size(); j++) {
+         if (pathways[j].reactionBitData == revEfm) {
+            pathways[j].reactionBitData = pathways[efmIndex].reactionBitData;
+            return true;
+         }
+      }
+      return false;
+   }
 
 public:
    bool debug_met;
@@ -321,7 +337,30 @@ public:
       }
    }
 
+   /**
+    * Prints EFMs after computing reaction coefficients.
+    * This function removes one efm from the pair of efms consisting of reversible
+    * reactions operating in opposite directions.
+    */
+   void printEFMsNoRevDup() {
+      BitVector* revPairs = (BitVector*) reversiblePairs;
+      BitVector revRxns;
+      for (int i = 0; i < reversiblePairCount; i++) {
+         revRxns.bitwiseOr(revPairs[i]);
+      }
+      BitVector revEfm;
+      ReactionCoefficients<BitVector> coeff;
+      cout << "*** EFMs ***" << endl;
+      coeff.printHeader();
+      for (int i = 0, j = 1; i < pathways.size(); i++) {
+         //If the pathway contains any irreversible reaction or it is not duplicate reversible efm
+         if (revRxns.notAndEqualsNot(pathways[i].reactionBitData) || !isRevEfm(i, revEfm, revPairs)) {
+            cout << j;
+            coeff.computeCoefficients(pathways[i].reactionBitData);
+            j++;
+         }
+      }
+   }
 };
 
-#endif	/* EFMGENERATOR_H */
-
+#endif /* EFMGENERATOR_H */
