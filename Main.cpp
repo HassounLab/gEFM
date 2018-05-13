@@ -15,7 +15,7 @@ Network network;
  * templated for BitVector used to store reactions.
  */
 template<class BitVector>
-void execute() {
+void execute(bool noRevDup) {
    reversibleTreeIndices = NULL;
 
    reversibleTreeIndices = (int*) malloc(MAX_PATHWAY_POOL_SIZE * sizeof (int));
@@ -44,7 +44,11 @@ void execute() {
 
    EFMGenerator<BitVector> efmgenerator(pathways);
    efmgenerator.genenrateEFMs();
-   efmgenerator.printEFMs();
+   if (noRevDup) {
+      efmgenerator.printEFMsNoRevDup();
+   } else {
+      efmgenerator.printEFMs();
+   }
    free(pathways);
 }
 
@@ -82,7 +86,7 @@ void computeMaxCardinality() {
  * Computes elementary flux modes for the given network.
  * @param file Network file.
  */
-void execute(const char* file) {
+void execute(const char* file, bool noRevDup) {
    if (!network.readNetworkFile(file)) {
       printf("Error loading network file\n");
       return;
@@ -96,19 +100,19 @@ void execute(const char* file) {
    reversiblePairCount = network.reversiblePairs.size();
    computeMaxCardinality();
    if (numReactions <= 32) {
-      execute<BitVector32>();
+      execute<BitVector32>(noRevDup);
    } else if (numReactions <= 64) {
-      execute<BitVector64>();
+      execute<BitVector64>(noRevDup);
    } else if (numReactions <= 96) {
-      execute<BitVector96>();
+      execute<BitVector96>(noRevDup);
    } else if (numReactions <= 128) {
-      execute<BitVector128>();
+      execute<BitVector128>(noRevDup);
    } else if (numReactions <= 160) {
-      execute<BitVector160>();
+      execute<BitVector160>(noRevDup);
    } else if (numReactions <= 192) {
-      execute<BitVector192>();
+      execute<BitVector192>(noRevDup);
    } else if (numReactions <= 448) {
-      execute<BitVector448>();
+      execute<BitVector448>(noRevDup);
    } else {
       printf("Maximum number of reactions supported is 448. Number of reactions in the network is %d", numReactions);
    }
@@ -121,11 +125,15 @@ void execute(const char* file) {
  * @return Exit code.
  */
 int main(int argc, char** argv) {
-   if (argc == 2) {
-      execute(argv[1]);
+   bool noRevDup = false;
+   if (argc >= 3 && !strcmp(argv[1], "-noRevDup")) {
+      noRevDup = true;
+   }
+   if (argc >= 2) {
+      execute(argv[argc - 1], noRevDup);
       freeResources();
    } else {
-      printf("Please specify the network file.");
+      printf("Usage: gefm [-noRevDup] <Network File>\n");
    }
    return (EXIT_SUCCESS);
 }
