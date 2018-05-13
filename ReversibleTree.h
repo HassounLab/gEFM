@@ -1,5 +1,5 @@
 #ifndef REVERSIBLETREE_H
-#define	REVERSIBLETREE_H
+#define REVERSIBLETREE_H
 
 #include "PathwayPool.h"
 #include "ReversibleTreeNode.h"
@@ -31,7 +31,7 @@ private:
    ReversibleTreeNode<BitVector>* root;
 
    void getBitsCannotBeUsed(BitVector& bitsCannotbeUsed, PathwayPool<BitVector>& list, int start, int end) {
-      unsigned int count;
+      int count;
       for (int r = 0; r < numReactions; r++) {
          bitsCannotbeUsed.setBit(r, !reversible[r]);
          if (!bitsCannotbeUsed[r]) {
@@ -51,5 +51,4 @@ private:
    }
 };
 
-#endif	/* REVERSIBLETREE_H */
-
+#endif /* REVERSIBLETREE_H */
